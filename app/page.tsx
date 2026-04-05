@@ -73,11 +73,8 @@ export default function Dashboard() {
         const totalMistakesAllTime = await fetchTotalMistakesCount(userId);
         setTotalMistakes(totalMistakesAllTime);
         
-        // Calculate Total Correct from both Daily Progress and Completed Quizzes (Mastery Historical)
-        const dailyCorrect = (allProgress.daily || []).reduce((acc, curr) => acc + (curr.vocabulary || 0) + (curr.grammar || 0), 0);
-        const quizCorrect = (allProgress.completed || []).reduce((acc, curr) => acc + (curr.score || 0), 0);
-        
-        const totalCorrectAllTime = dailyCorrect + quizCorrect;
+        // Calculate Total Correct from the LATEST score of each completed quiz
+        const totalCorrectAllTime = (allProgress.completed || []).reduce((acc, curr) => acc + (curr.score || 0), 0);
         setTotalCorrect(totalCorrectAllTime);
         
         const totalAttempted = totalCorrectAllTime + totalMistakesAllTime;

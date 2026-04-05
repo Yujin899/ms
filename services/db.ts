@@ -46,6 +46,7 @@ export interface UserProfile {
 }
 
 export interface MistakeRecord extends Question {
+  userId: string;
   userAnswer: string;
   timestamp?: Timestamp;
 }
@@ -258,17 +259,40 @@ export async function saveMistake(userId: string, question: Question, userAnswer
       userAnswer,
       timestamp: Timestamp.now()
     };
-    await addDoc(collection(firestore, "mistakes"), mistakeData);
+    // Use deterministic ID to prevent duplicate and allow easy resolution
+    const mistakeRef = doc(firestore, "mistakes", `${userId}_${question.id}`);
+    await setDoc(mistakeRef, mistakeData);
     
     // Keep local backup for speed
     const raw = localStorage.getItem("ms_mistakes_log");
     const mistakes: MistakeRecord[] = raw ? JSON.parse(raw) : [];
-    if (!mistakes.find((m) => m.id === question.id)) {
+    const index = mistakes.findIndex((m) => m.id === question.id);
+    if (index === -1) {
       mistakes.push(mistakeData as unknown as MistakeRecord);
-      localStorage.setItem("ms_mistakes_log", JSON.stringify(mistakes));
+    } else {
+      mistakes[index] = mistakeData as unknown as MistakeRecord;
     }
+    localStorage.setItem("ms_mistakes_log", JSON.stringify(mistakes));
   } catch (error) {
     console.error("Error saving mistake:", error);
+  }
+}
+
+export async function resolveMistake(userId: string, questionId: string) {
+  try {
+    const firestore = getDb();
+    const mistakeRef = doc(firestore, "mistakes", `${userId}_${questionId}`);
+    await deleteDoc(mistakeRef);
+    
+    // Clear from local backup
+    const raw = localStorage.getItem("ms_mistakes_log");
+    if (raw) {
+      const mistakes: MistakeRecord[] = JSON.parse(raw);
+      const filtered = mistakes.filter((m) => m.id !== questionId);
+      localStorage.setItem("ms_mistakes_log", JSON.stringify(filtered));
+    }
+  } catch (error) {
+    console.error("Error resolving mistake:", error);
   }
 }
 
@@ -477,8 +501,16 @@ export async function saveUserProgress(userId: string, topic: string, score: num
       currentData = progDoc.data() as ProgressData;
     }
     
-    if (topic === "vocabulary" || topic === "both") currentData.vocabulary += score;
-    if (topic === "grammar" || topic === "both") currentData.grammar += score;
+    if (topic === "vocabulary") {
+      currentData.vocabulary += score;
+    } else if (topic === "grammar") {
+      currentData.grammar += score;
+    } else if (topic === "both") {
+      // Split points for a "both" quiz to avoid inflating the total
+      const half = Math.floor(score / 2);
+      currentData.vocabulary += half;
+      currentData.grammar += (score - half);
+    }
     
     await setDoc(progressRef, currentData);
   } catch (error) {

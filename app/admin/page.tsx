@@ -308,34 +308,48 @@ export default function AdminPage() {
                     </div>
                   )}
 
-                  <div className="space-y-4">
+                    <div className="space-y-4">
                     <h3 className="text-xl font-extrabold text-foreground px-1 flex items-center gap-2">
                       {selectedStudent ? `${selectedStudent.name.split(' ')[0]}'s Mistakes` : "Latest Student Mistakes"}
                     </h3>
                     <div className="grid gap-4">
-                      {mistakes.slice(0, 5).map((m, idx) => (
-                        <div key={idx} className="bg-card border-2 border-b-4 border-border/60 rounded-2xl p-4 flex flex-col gap-3">
-                          <div className="flex items-center gap-2">
-                            <span className="p-1 px-2 rounded-lg bg-destructive/10 text-destructive text-xs font-bold uppercase ring-1 ring-destructive/20">
-                              {m.topic}
-                            </span>
-                            <span className="text-xs font-bold text-muted-foreground">
-                              {m.timestamp?.toDate().toLocaleDateString() || "Recent"}
-                            </span>
-                          </div>
-                          <p className="font-bold text-foreground">{m.text}</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-destructive/5 text-destructive border border-destructive/20">
-                              <XCircle className="w-4 h-4 shrink-0" />
-                              <span className="text-sm font-bold">Student: {m.userAnswer}</span>
+                      {mistakes
+                        .filter(m => !selectedStudent || m.userId === selectedStudent.uid)
+                        .slice(0, 5)
+                        .map((m, idx) => {
+                          const student = users.find(u => u.uid === m.userId);
+                          return (
+                            <div key={idx} className="bg-card border-2 border-b-4 border-border/60 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="p-1 px-2 rounded-lg bg-destructive/10 text-destructive text-[10px] font-black uppercase ring-1 ring-destructive/20 tracking-tight">
+                                    {m.topic}
+                                  </span>
+                                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                    {m.timestamp?.toDate().toLocaleDateString() || "Recent"}
+                                  </span>
+                                </div>
+                                {!selectedStudent && student && (
+                                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/60 text-[10px] font-black text-muted-foreground uppercase">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                    By: {student.name}
+                                  </div>
+                                )}
+                              </div>
+                              <p className="font-bold text-foreground leading-snug">{m.text}</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-destructive/5 text-destructive border border-destructive/20">
+                                  <XCircle className="w-4 h-4 shrink-0" />
+                                  <span className="text-sm font-bold">Mistake: {m.userAnswer}</span>
+                                </div>
+                                <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-primary/5 text-primary border border-primary/20">
+                                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                  <span className="text-sm font-bold font-primary">Correct: {m.correctAnswer}</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 p-2 px-3 rounded-xl bg-primary/5 text-primary border border-primary/20">
-                              <CheckCircle2 className="w-4 h-4 shrink-0" />
-                              <span className="text-sm font-bold font-primary">Correct: {m.correctAnswer}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                          );
+                        })}
                       {mistakes.length === 0 && (
                         <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-2xl border-2 border-dashed border-border/40 font-bold">
                           No student mistakes recorded yet!
@@ -654,7 +668,7 @@ export default function AdminPage() {
                   exit={{ opacity: 0, x: 20 }}
                   className="space-y-6"
                 >
-                  <GlobalMasteryHeatmap />
+                  <GlobalMasteryHeatmap selectedStudent={selectedStudent} units={units} />
                 </motion.div>
               )}
             </AnimatePresence>

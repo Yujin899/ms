@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { X, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
-import { getQuizQuestions, Question, saveMistake, saveUserProgress, saveQuizCompletion, fetchUnits, AttemptEntry, fetchQuizCompletion } from "@/services/db";
+import { getQuizQuestions, Question, saveMistake, saveUserProgress, saveQuizCompletion, fetchUnits, AttemptEntry, fetchQuizCompletion, resolveMistake } from "@/services/db";
 import { useAuth } from "@/context/auth-context";
 import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -155,6 +155,9 @@ export function QuizEngine({ quizId, mode }: QuizEngineProps) {
     if (isCorrect) {
       setScore((prev) => prev + 1);
       playCorrectSound();
+      if (profile?.uid) {
+        resolveMistake(profile.uid, currentQuestion.id);
+      }
     } else {
       if (profile?.uid) {
         saveMistake(profile.uid, currentQuestion, selectedOption);
@@ -308,7 +311,7 @@ export function QuizEngine({ quizId, mode }: QuizEngineProps) {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-4 sm:px-6 py-6 pb-32">
+      <main className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-4 sm:px-6 py-6 pb-48">
         <div className="mb-8">
           <Badge 
             variant="outline" 
@@ -367,7 +370,7 @@ export function QuizEngine({ quizId, mode }: QuizEngineProps) {
 
       {/* Footer / Notification Bar */}
       {isSubmitted && (
-        <div className={`fixed bottom-0 left-0 right-0 p-4 sm:p-6 border-t-4 font-semibold animate-in slide-in-from-bottom-full duration-300 ${timeLeft <= 0 || selectedOption !== currentQuestion.correctAnswer ? 'bg-warning/10 border-warning/20 text-warning-shadow' : 'bg-primary/5 border-primary/20 text-primary'}`}>
+        <div className={`fixed bottom-0 left-0 right-0 p-4 sm:p-6 border-t-4 font-semibold animate-in slide-in-from-bottom-full duration-300 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.1)] ${timeLeft <= 0 || selectedOption !== currentQuestion.correctAnswer ? 'bg-warning/10 border-warning/20 text-warning-shadow' : 'bg-primary/5 border-primary/20 text-primary'}`}>
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className={`p-2 sm:p-3 rounded-2xl ${timeLeft <= 0 ? 'bg-warning text-white shadow-[0_4px_0_#d97706]' : selectedOption === currentQuestion.correctAnswer ? 'bg-primary text-white shadow-[0_4px_0_#46a302]' : 'bg-warning text-white shadow-[0_4px_0_#ff9600]'}`}>
@@ -420,7 +423,7 @@ export function QuizEngine({ quizId, mode }: QuizEngineProps) {
 
       {/* Floating Action Button (Only if not submitted) */}
       {!isSubmitted && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-background/80 backdrop-blur border-t-2 border-border/60">
+        <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-background/80 backdrop-blur border-t-2 border-border/60 shadow-[0_-8px_16px_-4px_rgba(0,0,0,0.05)]">
           <div className="max-w-3xl mx-auto flex justify-end">
             <Button
               size="lg"
