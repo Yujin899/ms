@@ -130,14 +130,37 @@ export function UnitsList({ units: propUnits, profile }: UnitsListProps) {
                           </div>
                         </div>
                       </div>
-                      <Button 
-                        variant={quiz.completed ? "secondary" : "default"} 
-                        size="sm"
-                        className="transition-all"
-                        onClick={() => router.push(`/quiz/${quiz.id}`)}
-                      >
-                        {quiz.completed ? "Review" : "Start"}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {quiz.completed ? (
+                          <>
+                            <Button 
+                              variant="outline"
+                              size="sm"
+                              className="font-black text-[10px] uppercase tracking-widest h-8 px-3 border-2 hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all rounded-xl shadow-sm"
+                              onClick={() => router.push(`/quiz/${quiz.id}?mode=preview`)}
+                            >
+                              Preview
+                            </Button>
+                            <Button 
+                              variant="secondary"
+                              size="sm"
+                              className="font-black text-[10px] uppercase tracking-widest h-8 px-3 border-2 border-b-4 border-secondary-shadow active:border-b-2 active:translate-y-[2px] transition-all rounded-xl shadow-sm"
+                              onClick={() => router.push(`/quiz/${quiz.id}`)}
+                            >
+                              Retake
+                            </Button>
+                          </>
+                        ) : (
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            className="font-black text-[10px] uppercase tracking-widest h-8 px-4 border-2 border-b-4 border-primary-shadow active:border-b-2 active:translate-y-[2px] transition-all rounded-xl shadow-sm"
+                            onClick={() => router.push(`/quiz/${quiz.id}`)}
+                          >
+                            Start
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
