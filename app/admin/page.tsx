@@ -231,8 +231,8 @@ export default function AdminPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold transition-all whitespace-nowrap ${
                   activeTab === tab 
-                    ? "bg-white text-primary shadow-sm ring-1 ring-black/5" 
-                    : "text-muted-foreground hover:bg-white/50"
+                    ? "bg-card text-primary shadow-sm ring-1 ring-black/5" 
+                    : "text-muted-foreground hover:bg-card/50"
                 }`}
               >
                 {tab === "overview" && <LayoutDashboard className="w-4 h-4" />}
@@ -401,7 +401,7 @@ export default function AdminPage() {
                         </div>
                         <div className="p-4 bg-muted/10 space-y-2">
                           {unit.quizzes.map((quiz) => (
-                            <div key={quiz.id} className="flex items-center justify-between p-3 bg-white border-2 border-border/40 rounded-xl shadow-sm">
+                            <div key={quiz.id} className="flex items-center justify-between p-3 bg-card border-2 border-border/40 rounded-xl shadow-sm">
                               <div className="flex items-center gap-3">
                                 <span className={`w-2 h-2 rounded-full ${quiz.topic === 'grammar' ? 'bg-secondary' : 'bg-primary'}`} />
                                 <span className="font-bold text-sm">{quiz.title}</span>

@@ -14,7 +14,7 @@ import {
 } from "@/services/db";
 import { Mastery3DCard } from "./Mastery3DCard";
 import { DistractorPopup } from "./DistractorPopup";
-import { Loader2, LayoutGrid, AlertCircle, Brain, Zap, Clock, Target, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, AlertCircle, Brain, Zap, Clock, Target, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -173,7 +173,7 @@ export function GlobalMasteryHeatmap({ selectedStudent, units }: Props) {
             <select 
               value={selectedQuizId || ""}
               onChange={(e) => setSelectedQuizId(e.target.value)}
-              className="p-3 px-4 rounded-2xl border-2 border-b-4 border-primary/20 bg-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              className="p-3 px-4 rounded-2xl border-2 border-b-4 border-primary/20 bg-background font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"
             >
               <option value="">Choose Quiz...</option>
               {units.map(u => (
@@ -192,7 +192,7 @@ export function GlobalMasteryHeatmap({ selectedStudent, units }: Props) {
              <div className="w-16 h-16 bg-muted/40 rounded-full flex items-center justify-center mx-auto text-muted-foreground">
                 <Target className="w-8 h-8" />
              </div>
-             <p className="font-bold text-muted-foreground">Select a quiz above to reveal {selectedStudent.name.split(' ')[0]}'s performance profile.</p>
+             <p className="font-bold text-muted-foreground">Select a quiz above to reveal {selectedStudent.name.split(' ')[0]}&apos;s performance profile.</p>
           </div>
         ) : fetchingStudent ? (
            <div className="flex flex-col items-center justify-center h-64 gap-3">
@@ -320,7 +320,7 @@ function QuadrantGroup({ title, subtitle, icon, items, color }: {
     <div className={`p-6 rounded-[2.5rem] border-2 border-b-6 flex flex-col h-full ${bgStyle} ${borderStyle}`}>
       <div className="flex items-center justify-between mb-4 px-2">
          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-white shadow-sm border border-border/20">
+            <div className="p-2.5 rounded-xl bg-card shadow-sm border border-border/20">
                {icon}
             </div>
             <div>
@@ -335,7 +335,7 @@ function QuadrantGroup({ title, subtitle, icon, items, color }: {
 
       <div className="space-y-3 flex-1 overflow-y-auto max-h-[350px] pr-2 customized-scroll">
          {items.map((item, idx) => (
-           <div key={idx} className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-white/50 shadow-sm space-y-2">
+           <div key={idx} className="bg-card/80 backdrop-blur-sm p-4 rounded-2xl border border-border/40 shadow-sm space-y-2">
               <p className="text-sm font-bold text-foreground leading-snug">{item.text}</p>
               <div className="flex flex-wrap gap-2 items-center text-[10px] font-black uppercase">
                  <span className="text-muted-foreground flex items-center gap-1">
