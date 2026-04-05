@@ -148,7 +148,7 @@ export default function RegisterPage() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-b-4 border-border/60 bg-white font-bold outline-none focus:border-amber-500/50 focus:border-b-2 focus:translate-y-[2px] focus:bg-muted/30 focus:shadow-inner transition-all"
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-b-4 border-border/60 bg-background font-bold outline-none focus:border-amber-500/50 focus:border-b-2 focus:translate-y-[2px] focus:bg-muted/30 focus:shadow-inner transition-all placeholder:text-muted-foreground/50"
                 />
               </motion.div>
             </div>
