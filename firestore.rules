@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- Helper Functions ---
+    
+    // Simple check if user is logged in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Safely retrieve user document from /users/{uid}
+    // and extract the role or verification status
+    function getUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // New users can be considered "unverified" until teacher approves
+    function isVerified() {
+      return isSignedIn() && getUser().get('isVerified', false) == true;
+    }
+
+    // Checks if the user is a teacher
+    function isTeacher() {
+      return isSignedIn() && getUser().get('role', 'student') == "teacher";
+    }
+
+    // --- Collection Rules ---
+
+    // 1. Users, Progress, and Completions
+    match /users/{userId} {
+      // Students can only read their own profile; Teachers can read/list all profiles
+      allow get: if isSignedIn() && (request.auth.uid == userId || isTeacher());
+      allow list: if isTeacher();
+      
+      // Allow profile creation during sign up
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      
+      // Only teachers can modify profile-level data once created
+      allow update, delete: if isTeacher(); 
+      
+      // ISOLATED PROGRESS: Students write their own, Teachers can read all
+      match /progress/{date} {
+        allow read: if isSignedIn() && (request.auth.uid == userId || isTeacher());
+        allow write: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if isTeacher();
+      }
+
+      // ISOLATED COMPLETIONS: Individual progress tracking
+      match /completedQuizzes/{quizId} {
+        allow read: if isSignedIn() && (request.auth.uid == userId || isTeacher());
+        allow write: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if isTeacher();
+      }
+    }
+
+    // ANALYTICS ENGINE: Support Collection Group queries for Heatmap
+    // Essential for teachers to track global performance across all student sub-collections
+    match /{path=**}/completedQuizzes/{quizId} {
+      allow read: if isTeacher();
+    }
+
+    // 2. Mistakes (User-specific identifying data)
+    match /mistakes/{mistakeId} {
+      // Mistakes are identifiable by the userId field in the document
+      allow read: if isTeacher() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Allow students to delete/resolve their own mistakes
+      allow delete: if isTeacher() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update: if isTeacher() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // 3. Course Content (Units & Questions)
+    match /units/{unitId} {
+      // Authenticated students can read content; Teachers can manage it
+      allow read: if isSignedIn();
+      allow write: if isTeacher();
+    }
+    
+    match /questions/{questionId} {
+      allow read: if isSignedIn();
+      allow write: if isTeacher();
+    }
+  }
+}

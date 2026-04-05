@@ -373,7 +373,7 @@ export function QuizEngine({ quizId, mode }: QuizEngineProps) {
         <div className={`fixed bottom-0 left-0 right-0 p-4 sm:p-6 border-t-4 font-semibold animate-in slide-in-from-bottom-full duration-300 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.1)] ${timeLeft <= 0 || selectedOption !== currentQuestion.correctAnswer ? 'bg-warning/10 border-warning/20 text-warning-shadow' : 'bg-primary/5 border-primary/20 text-primary'}`}>
           <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className={`p-2 sm:p-3 rounded-2xl ${timeLeft <= 0 ? 'bg-warning text-warning-foreground shadow-[0_4px_0_var(--warning-shadow)]' : selectedOption === currentQuestion.correctAnswer ? 'bg-primary text-primary-foreground shadow-[0_4px_0_var(--primary-shadow)]' : 'bg-warning text-warning-foreground shadow-[0_4px_0_var(--warning-shadow)]'}`}>
+              <div className={`p-2 sm:p-3 rounded-2xl ${timeLeft <= 0 ? 'bg-warning !text-white shadow-[0_4px_0_var(--warning-shadow)]' : selectedOption === currentQuestion.correctAnswer ? 'bg-primary !text-white shadow-[0_4px_0_var(--primary-shadow)]' : 'bg-warning !text-white shadow-[0_4px_0_var(--warning-shadow)]'}`}>
                 {timeLeft <= 0 ? (
                   <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8"/>
                 ) : selectedOption === currentQuestion.correctAnswer ? (
@@ -409,9 +409,9 @@ export function QuizEngine({ quizId, mode }: QuizEngineProps) {
                 size="lg" 
                 className={`h-12 sm:h-14 px-8 sm:px-12 text-lg sm:text-xl font-black rounded-2xl transition-all ${
                   (selectedOption === currentQuestion.correctAnswer && timeLeft > 0) || isReviewMode
-                    ? 'bg-primary border-primary-shadow hover:bg-primary/90' 
-                    : 'bg-warning border-warning-shadow hover:bg-warning/90'
-                } text-primary-foreground text-center`}
+                    ? 'bg-primary border-primary-shadow hover:bg-primary/90 !text-white' 
+                    : 'bg-warning border-warning-shadow hover:bg-warning/90 !text-warning-foreground'
+                } text-center`}
                 onClick={handleNext}
               >
                 {isReviewMode && currentIndex === questions.length - 1 ? "FINISH" : "CONTINUE"}

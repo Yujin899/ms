@@ -193,9 +193,9 @@ export default function Dashboard() {
               {nextQuiz.completed ? (
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-center">
                   <Button 
-                    variant="secondary" 
+                    variant="outline" 
                     size="xl" 
-                    className="w-full sm:w-[180px] uppercase border-2 bg-card hover:bg-muted/50 transition-all border-b-4 active:border-b-2 active:translate-y-px h-16 rounded-2xl font-black text-lg"
+                    className="w-full sm:w-[180px] uppercase transition-all h-16 rounded-2xl font-black text-lg"
                     onClick={() => router.push(`/quiz/${nextQuiz.id}?mode=preview`)}
                   >
                     PREVIEW
@@ -259,14 +259,14 @@ export default function Dashboard() {
           <motion.div 
             variants={itemVariants}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            className="bg-card border-2 border-b-4 border-border/60 rounded-2xl p-5 flex flex-col gap-4 transition-all hover:border-emerald-500/50 group cursor-default shadow-sm"
+            className="bg-card border-2 border-b-4 border-border/60 rounded-2xl p-5 flex flex-col gap-4 transition-all hover:border-success/50 group cursor-default shadow-sm"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3.5 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500/15 transition-colors">
+              <div className="p-3.5 rounded-xl bg-success/10 text-success group-hover:bg-success/15 transition-colors">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
               <div>
-                <div className="text-3xl font-black text-emerald-600 leading-none">
+                <div className="text-3xl font-black text-success leading-none">
                   <CountUp to={totalCorrect} />
                 </div>
                 <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-70">Total Correct</div>
@@ -284,7 +284,7 @@ export default function Dashboard() {
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min((totalCorrect / 1000) * 100, 100)}%` }}
                     transition={{ type: "spring", stiffness: 50, damping: 20, delay: 0.5 }}
-                    className="h-full bg-emerald-500 rounded-full"
+                    className="h-full bg-success rounded-full"
                   />
                 </div>
               </div>
@@ -294,14 +294,14 @@ export default function Dashboard() {
           <motion.div 
             variants={itemVariants}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            className="bg-card border-2 border-b-4 border-border/60 rounded-2xl p-5 flex flex-col gap-4 transition-all hover:border-blue-500/50 group cursor-default shadow-sm"
+            className="bg-card border-2 border-b-4 border-border/60 rounded-2xl p-5 flex flex-col gap-4 transition-all hover:border-info/50 group cursor-default shadow-sm"
           >
             <div className="flex items-center gap-4">
-              <div className="p-3.5 rounded-xl bg-blue-500/10 text-blue-500 group-hover:bg-blue-500/15 transition-colors">
+              <div className="p-3.5 rounded-xl bg-info/10 text-info group-hover:bg-info/15 transition-colors">
                 <Target className="w-7 h-7" />
               </div>
               <div>
-                <div className="text-3xl font-black text-blue-600 leading-none">
+                <div className="text-3xl font-black text-info leading-none">
                   <CountUp to={Math.round(masteryScore)} suffix="%" />
                 </div>
                 <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-70">Mastery Score</div>

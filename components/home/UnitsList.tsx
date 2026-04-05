@@ -109,7 +109,7 @@ export function UnitsList({ units: propUnits, profile }: UnitsListProps) {
                   {unit.quizzes.map((quiz, qIndex) => (
                     <div
                       key={quiz.id}
-                      className="flex items-center justify-between p-3 rounded-xl border-2 border-b-2 border-border/40 bg-muted/20 hover:bg-muted/40 transition-all hover:border-border/60"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-3 sm:gap-0 rounded-xl border-2 border-b-2 border-border/40 bg-muted/20 hover:bg-muted/40 transition-all hover:border-border/60"
                     >
                       <div className="flex items-center gap-3">
                         {quiz.completed ? (
