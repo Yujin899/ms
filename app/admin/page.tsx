@@ -42,7 +42,8 @@ import {
   fetchAllMistakes,
   UserProfile,
   Unit,
-  MistakeRecord
+  MistakeRecord,
+  Question
 } from "@/services/db";
 import { useAuth } from "@/context/auth-context";
 
@@ -115,7 +116,8 @@ export default function AdminPage() {
       await nuclearDeleteUser(uid);
       await loadAllData();
       showStatus('success', 'User data purged successfully.');
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       showStatus('error', 'Failed to purge user data.');
     }
   };
@@ -127,10 +129,12 @@ export default function AdminPage() {
       await addUnit({ title, description: "", quizzes: [] });
       loadAllData();
       showStatus('success', 'Unit created!');
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       showStatus('error', 'Failed to create unit');
     }
   };
+
 
   const handleBulkUpload = async () => {
     if (!selectedUnitId || !quizTitle || !jsonInput) {
@@ -139,20 +143,20 @@ export default function AdminPage() {
     }
 
     try {
-      const questions = JSON.parse(jsonInput);
+      const questions: Partial<Question>[] = JSON.parse(jsonInput);
       const quizId = await addQuizToUnit(selectedUnitId, {
         title: quizTitle,
         topic: quizTopic,
         timerSeconds: Number(quizTimer) || 30
       });
-      await bulkUploadQuestions(quizId, questions);
+      await bulkUploadQuestions(quizId, questions as Question[]);
       
       setQuizTitle("");
       setJsonInput("");
       loadAllData();
       showStatus('success', `Quiz "${quizTitle}" uploaded with ${questions.length} questions!`);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       showStatus('error', 'Invalid JSON or upload failed');
     }
   };
@@ -352,9 +356,11 @@ export default function AdminPage() {
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="text-2xl font-black">Manage Learning Path</h3>
-                    <Button onClick={handleCreateUnit} variant="secondary" className="gap-2">
-                      <Plus className="w-4 h-4" /> Add Unit
-                    </Button>
+                    <div className="flex gap-3">
+                      <Button onClick={handleCreateUnit} variant="secondary" className="gap-2">
+                        <Plus className="w-4 h-4" /> Add Unit
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="space-y-4">

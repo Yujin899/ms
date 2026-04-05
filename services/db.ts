@@ -153,7 +153,7 @@ export async function fetchAllUserProgress(userId: string): Promise<UserAnalytic
       completed: completedQuizzes
     };
   } catch (error) {
-    console.error("Error fetching all progress:", error);
+    console.error(`[DB Service] Failed to aggregate progress for user ${userId}:`, error);
     return { daily: [], completed: [] };
   }
 }

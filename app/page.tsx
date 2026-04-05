@@ -7,7 +7,8 @@ import {
   CheckCircle2, 
   Target, 
   AlertCircle,
-  LayoutDashboard
+  LayoutDashboard,
+  BookOpen
 } from "lucide-react";
 import { 
   fetchUnits, 
@@ -31,6 +32,7 @@ export default function Dashboard() {
   const [masteryScore, setMasteryScore] = useState(0);
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [nextQuiz, setNextQuiz] = useState<Quiz | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Animation variants
   const statsVariants: Variants = {
@@ -58,20 +60,28 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (!profile?.uid) return;
+    if (!profile?.uid) {
+      const timer = setTimeout(() => setIsLoading(false), 0);
+      return () => clearTimeout(timer);
+    }
 
     async function loadStats() {
+      setIsLoading(true);
       try {
         const userId = profile!.uid;
         const allProgress = await fetchAllUserProgress(userId);
         const totalMistakesAllTime = await fetchTotalMistakesCount(userId);
         setTotalMistakes(totalMistakesAllTime);
         
-        const correctSum = allProgress.daily.reduce((acc, curr) => acc + (curr.vocabulary || 0) + (curr.grammar || 0), 0);
-        setTotalCorrect(correctSum);
+        // Calculate Total Correct from both Daily Progress and Completed Quizzes (Mastery Historical)
+        const dailyCorrect = (allProgress.daily || []).reduce((acc, curr) => acc + (curr.vocabulary || 0) + (curr.grammar || 0), 0);
+        const quizCorrect = (allProgress.completed || []).reduce((acc, curr) => acc + (curr.score || 0), 0);
         
-        const totalAttempted = correctSum + totalMistakesAllTime;
-        const calculatedMastery = totalAttempted > 0 ? (correctSum / totalAttempted) * 100 : 0;
+        const totalCorrectAllTime = dailyCorrect + quizCorrect;
+        setTotalCorrect(totalCorrectAllTime);
+        
+        const totalAttempted = totalCorrectAllTime + totalMistakesAllTime;
+        const calculatedMastery = totalAttempted > 0 ? (totalCorrectAllTime / totalAttempted) * 100 : 0;
         setMasteryScore(calculatedMastery);
 
         const unitsData = await fetchUnits(userId);
@@ -93,10 +103,36 @@ export default function Dashboard() {
         setNextQuiz(found);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setIsLoading(false);
       }
     }
     loadStats();
-  }, [profile?.uid, profile]);
+  }, [profile?.uid, profile?.role, profile]);
+
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-6"
+        >
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-primary font-black text-xs uppercase tracking-tighter">MS</span>
+            </div>
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">Synchronizing...</h2>
+            <p className="text-muted-foreground font-bold max-w-[240px]">Waking up your mastery dashboard and learning brain.</p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -309,6 +345,33 @@ export default function Dashboard() {
             </h2>
           </div>
           <UnitsList units={units} />
+          
+          {units.length === 0 && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-10 text-center bg-card border-2 border-dashed border-border/60 rounded-[2rem] space-y-6"
+            >
+              <div className="w-20 h-20 bg-muted/20 rounded-full flex items-center justify-center mx-auto text-muted-foreground">
+                <BookOpen className="w-10 h-10" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-foreground">No Units Found</h3>
+                <p className="text-muted-foreground font-bold max-w-xs mx-auto">
+                  The curriculum is currently empty. Please wait for your teacher to release the first set of challenges.
+                </p>
+              </div>
+              {profile?.role === "teacher" && (
+                <Button 
+                  variant="hero" 
+                  onClick={() => router.push("/admin")}
+                  className="font-black h-12 px-8 rounded-xl"
+                >
+                  Manage Content
+                </Button>
+              )}
+            </motion.div>
+          )}
         </div>
       </motion.main>
     </div>
