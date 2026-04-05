@@ -12,18 +12,18 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 
-          "bg-primary text-white hover:bg-primary/95 border-b-4 border-primary-shadow active:border-b-0 active:translate-y-[2px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none",
+          "bg-primary text-primary-foreground hover:bg-primary/95 border-b-4 border-primary-shadow active:border-b-0 active:translate-y-[2px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none",
         outline:
-          "border border-border bg-background text-white hover:bg-muted border-b-4 border-border-shadow active:border-b-0 active:translate-y-[2px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none",
+          "border border-border bg-background text-foreground hover:bg-muted border-b-4 border-border-shadow active:border-b-0 active:translate-y-[2px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none",
         secondary:
-          "bg-secondary text-white hover:bg-secondary/90 border-b-4 border-secondary-shadow active:border-b-0 active:translate-y-[2px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/90 border-b-4 border-secondary-shadow active:border-b-0 active:translate-y-[2px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none",
         hero:
-          "bg-primary text-white hover:bg-primary/95 border-b-[6px] border-primary-shadow active:border-b-2 active:translate-y-[4px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none font-black",
+          "bg-primary text-primary-foreground hover:bg-primary/95 border-b-[6px] border-primary-shadow active:border-b-2 active:translate-y-[4px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none font-black",
         ghost:
-          "text-white hover:bg-muted active:translate-y-px duration-75",
+          "text-foreground hover:bg-muted active:translate-y-px duration-75",
         destructive:
-          "bg-destructive text-white border-b-4 border-destructive-shadow active:border-b-0 active:translate-y-[2px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none",
-        link: "text-white underline-offset-4 hover:underline",
+          "bg-destructive text-destructive-foreground border-b-4 border-destructive-shadow active:border-b-0 active:translate-y-[2px] disabled:border-b-2 disabled:translate-y-[2px] disabled:shadow-none",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-11 px-6 rounded-2xl pt-2 pb-3",

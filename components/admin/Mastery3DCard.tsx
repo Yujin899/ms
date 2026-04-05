@@ -51,7 +51,7 @@ export function Mastery3DCard({ stats, onClick }: Mastery3DCardProps) {
           )}
           <span className="text-[10px] font-black uppercase tracking-widest">{totalAttempts} Attempts</span>
         </div>
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/20 text-[10px] font-black uppercase">
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-foreground/10 text-[10px] font-black uppercase">
           <Clock className="w-3 h-3" />
           {Math.round(averageTimeTaken)}s
         </div>
@@ -73,7 +73,7 @@ export function Mastery3DCard({ stats, onClick }: Mastery3DCardProps) {
       </div>
 
       {/* Decorative Shine */}
-      <div className="absolute inset-0 rounded-[2rem] bg-linear-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 rounded-[2rem] bg-linear-to-tr from-transparent via-foreground/5 to-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity" />
     </motion.button>
   );
 }

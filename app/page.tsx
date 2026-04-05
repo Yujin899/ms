@@ -137,7 +137,7 @@ export default function Dashboard() {
         <div className="container mx-auto max-w-3xl flex h-16 items-center px-4 gap-4">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center rounded-xl bg-primary px-3 py-1.5 border-b-4 border-primary-shadow">
-              <span className="text-white font-black text-xl leading-none">MS</span>
+              <span className="text-primary-foreground font-black text-xl leading-none">MS</span>
             </div>
           </div>
           <div className="ml-auto flex items-center gap-3">
