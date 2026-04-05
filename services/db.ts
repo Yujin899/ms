@@ -210,6 +210,26 @@ export async function saveQuizCompletion(userId: string, quizId: string, score: 
   }
 }
 
+export async function fetchQuizCompletion(userId: string, quizId: string) {
+  try {
+    const firestore = getDb();
+    const completionRef = doc(firestore, "users", userId, "completedQuizzes", quizId);
+    const snap = await getDoc(completionRef);
+    if (snap.exists()) {
+      return snap.data() as { 
+        quizId: string; 
+        score: number; 
+        attemptHistory: AttemptEntry[]; 
+        completedAt: Timestamp 
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching quiz completion:", error);
+    return null;
+  }
+}
+
 export async function getQuizQuestions(quizId: string): Promise<Question[]> {
   try {
     const firestore = getDb();

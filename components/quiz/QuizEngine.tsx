@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { X, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
-import { getQuizQuestions, Question, saveMistake, saveUserProgress, saveQuizCompletion, fetchUnits, AttemptEntry } from "@/services/db";
+import { getQuizQuestions, Question, saveMistake, saveUserProgress, saveQuizCompletion, fetchUnits, AttemptEntry, fetchQuizCompletion } from "@/services/db";
 import { useAuth } from "@/context/auth-context";
 import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,10 @@ import { motion } from "framer-motion";
 
 interface QuizEngineProps {
   quizId: string;
+  mode?: "preview";
 }
 
-export function QuizEngine({ quizId }: QuizEngineProps) {
+export function QuizEngine({ quizId, mode }: QuizEngineProps) {
   const router = useRouter();
   const { profile } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -27,6 +28,8 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
   const [timeLeft, setTimeLeft] = useState(30); // Default 30s
   const [attempts, setAttempts] = useState<AttemptEntry[]>([]);
   const [timeLimit, setTimeLimit] = useState(30);
+  const [isReviewMode, setIsReviewMode] = useState(mode === "preview");
+  const [pastAttempts, setPastAttempts] = useState<AttemptEntry[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -42,16 +45,35 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
           break;
         }
       }
+
+      // If in preview mode, fetch past completion
+      if (mode === "preview" && profile?.uid) {
+        const completion = await fetchQuizCompletion(profile.uid, quizId);
+        if (completion) {
+          setPastAttempts(completion.attemptHistory);
+          setIsReviewMode(true);
+          
+          // Sync first question state if in review mode
+          const firstPast = completion.attemptHistory.find(a => a.questionId === data[0]?.id);
+          if (firstPast) {
+            setSelectedOption(firstPast.selectedOption === "Timeout" ? null : firstPast.selectedOption);
+            setIsSubmitted(true);
+          }
+        } else {
+          // If no past completion, just start as normal quiz
+          setIsReviewMode(false);
+        }
+      }
     }
     load();
-  }, [quizId]);
+  }, [quizId, mode, profile?.uid]);
 
   const currentQuestion = questions[currentIndex];
   const isCorrect = selectedOption === currentQuestion?.correctAnswer;
 
   const handleTimeout = useCallback(() => {
-    // Only proceed if not already submitted
-    if (isSubmitted || isFinished || !currentQuestion) return;
+    // Only proceed if not already submitted or in review mode
+    if (isSubmitted || isFinished || !currentQuestion || isReviewMode) return;
     
     setIsSubmitted(true);
     playWrongSound();
@@ -69,13 +91,17 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
       isCorrect: false,
       timeTaken: timeLimit
     }]);
-  }, [isSubmitted, isFinished, profile?.uid, currentQuestion, selectedOption, timeLimit]);
+  }, [isSubmitted, isFinished, profile?.uid, currentQuestion, selectedOption, timeLimit, isReviewMode]);
 
   // Per-question timer logic
   useEffect(() => {
     if (isFinished || isSubmitted || questions.length === 0) return;
     
     const interval = setInterval(() => {
+      if (isReviewMode) {
+        clearInterval(interval);
+        return;
+      }
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
@@ -87,16 +113,16 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [isFinished, isSubmitted, questions.length, handleTimeout]);
+  }, [isFinished, isSubmitted, questions.length, handleTimeout, isReviewMode]);
 
   // Save progress when finished
   useEffect(() => {
-    if (isFinished && questions.length > 0 && profile?.uid) {
+    if (isFinished && questions.length > 0 && profile?.uid && !isReviewMode) {
       const topic = questions[0].topic || "vocabulary";
       saveUserProgress(profile.uid, topic, score);
       saveQuizCompletion(profile.uid, quizId, score, attempts);
     }
-  }, [isFinished, questions, score, profile?.uid, quizId, attempts]);
+  }, [isFinished, questions, score, profile?.uid, quizId, attempts, isReviewMode]);
 
   if (questions.length === 0) {
     return (
@@ -138,16 +164,36 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
   };
 
   const handleNext = () => {
+    const nextIndex = currentIndex + 1;
     // SECURITY: Reset timer state FIRST to prevent leaks into next question
     setTimeLeft(timeLimit);
-    setIsSubmitted(false);
-    setSelectedOption(null);
     
-    if (currentIndex + 1 < questions.length) {
-      setCurrentIndex((prev) => prev + 1);
+    if (nextIndex < questions.length) {
+      setCurrentIndex(nextIndex);
+      
+      if (isReviewMode) {
+        const past = pastAttempts.find(a => a.questionId === questions[nextIndex].id);
+        setSelectedOption(past?.selectedOption === "Timeout" ? null : (past?.selectedOption || null));
+        setIsSubmitted(true);
+      } else {
+        setIsSubmitted(false);
+        setSelectedOption(null);
+      }
     } else {
       setIsFinished(true); // Show results
     }
+  };
+
+  const handleRetake = () => {
+    playClickSound();
+    setIsReviewMode(false);
+    setIsFinished(false);
+    setCurrentIndex(0);
+    setScore(0);
+    setSelectedOption(null);
+    setIsSubmitted(false);
+    setAttempts([]);
+    setTimeLeft(timeLimit);
   };
 
   // --- RESULTS VIEW ---
@@ -186,12 +232,20 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
           </div>
           
           <div className="flex flex-col gap-3 pt-4 sm:pt-8 w-full">
-            <Button size="lg" variant="secondary" className="w-full text-base sm:text-lg h-12 sm:h-14 shrink-0 transition-all" onClick={() => router.push("/mistakes")}>
-              Review Mistakes
-            </Button>
-            <Button size="lg" className="w-full text-base sm:text-lg h-12 sm:h-14 shrink-0" onClick={() => router.push("/")}>
-              Continue Learning
-            </Button>
+            {isReviewMode ? (
+              <Button size="lg" className="w-full text-base sm:text-lg h-12 sm:h-14 shrink-0 transition-all shadow-xl shadow-primary/20" onClick={handleRetake}>
+                Retake Quiz
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" variant="secondary" className="w-full text-base sm:text-lg h-12 sm:h-14 shrink-0 transition-all" onClick={() => router.push("/mistakes")}>
+                  Review Mistakes
+                </Button>
+                <Button size="lg" className="w-full text-base sm:text-lg h-12 sm:h-14 shrink-0" onClick={() => router.push("/")}>
+                  Continue Learning
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -207,8 +261,8 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
           initial={false}
           animate={{ 
             width: `${(timeLeft / timeLimit) * 100}%`,
-            backgroundColor: timeLeft <= 15 ? "var(--warning)" : "var(--secondary)",
-            opacity: timeLeft <= 10 && !isSubmitted ? [1, 0.6, 1] : 1
+            backgroundColor: (timeLeft <= 15 || isReviewMode) ? (isReviewMode ? "var(--primary)" : "var(--warning)") : "var(--secondary)",
+            opacity: timeLeft <= 10 && !isSubmitted && !isReviewMode ? [1, 0.6, 1] : 1
           }}
           transition={{ 
             width: { duration: 1, ease: "linear" },
@@ -241,6 +295,16 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
             </ProgressTrack>
           </Progress>
         </div>
+        {isReviewMode && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRetake}
+            className="h-9 px-4 rounded-xl border-primary/20 text-primary hover:bg-primary/5 font-black uppercase tracking-tighter"
+          >
+            Retake
+          </Button>
+        )}
       </header>
 
       {/* Main Container */}
@@ -285,8 +349,9 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
               <button
                 key={option}
                 type="button"
-                disabled={isSubmitted}
+                disabled={isSubmitted || isReviewMode}
                 onClick={() => {
+                  if (isReviewMode) return;
                   playClickSound();
                   setSelectedOption(option);
                 }}
@@ -316,24 +381,39 @@ export function QuizEngine({ quizId }: QuizEngineProps) {
               </div>
               <div>
                 <div className="text-xl sm:text-2xl font-black mb-0.5 sm:mb-1">
-                  {timeLeft <= 0 ? "Time's Up!" : selectedOption === currentQuestion.correctAnswer ? "Excellent!" : "Not quite!"}
+                  {isReviewMode 
+                    ? (selectedOption === currentQuestion.correctAnswer ? "Correct Answer" : selectedOption === null ? "Time's Up (Missed)" : "Your Selection")
+                    : (timeLeft <= 0 ? "Time's Up!" : selectedOption === currentQuestion.correctAnswer ? "Excellent!" : "Not quite!")
+                  }
                 </div>
                 <p className="text-sm sm:text-base font-bold text-foreground/80 leading-relaxed font-arabic" dir="rtl">
                   {currentQuestion.explanation}
                 </p>
               </div>
             </div>
-            <Button 
-              size="lg" 
-              className={`h-12 sm:h-14 px-8 sm:px-12 text-lg sm:text-xl font-black rounded-2xl transition-all ${
-                selectedOption === currentQuestion.correctAnswer && timeLeft > 0
-                  ? 'bg-primary border-primary-shadow hover:bg-primary/90' 
-                  : 'bg-warning border-warning-shadow hover:bg-warning/90'
-              } text-white`}
-              onClick={handleNext}
-            >
-              CONTINUE
-            </Button>
+            <div className="flex gap-3">
+              {isReviewMode && currentIndex === questions.length - 1 && (
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="h-12 sm:h-14 px-6 text-lg font-black rounded-2xl border-2"
+                  onClick={handleRetake}
+                >
+                  RETAKE
+                </Button>
+              )}
+              <Button 
+                size="lg" 
+                className={`h-12 sm:h-14 px-8 sm:px-12 text-lg sm:text-xl font-black rounded-2xl transition-all ${
+                  (selectedOption === currentQuestion.correctAnswer && timeLeft > 0) || isReviewMode
+                    ? 'bg-primary border-primary-shadow hover:bg-primary/90' 
+                    : 'bg-warning border-warning-shadow hover:bg-warning/90'
+                } text-white`}
+                onClick={handleNext}
+              >
+                {isReviewMode && currentIndex === questions.length - 1 ? "FINISH" : "CONTINUE"}
+              </Button>
+            </div>
           </div>
         </div>
       )}
